@@ -13,7 +13,7 @@ var (
 )
 var nOfIther = 0
 
-// Simple example of how fast-http-abstracted works
+// Simple example of how fast-http-express works
 func main() {
 
 	router1 := NewRouter("/api/go")
