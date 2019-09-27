@@ -212,7 +212,7 @@ type FastModifiedHttp struct {
 func (f *FastModifiedHttp) StartApp(port string) {
 	flag.Parse()
 	h := f.processRouters
-	if err := fasthttp.ListenAndServe(*addr, h); err != nil {
+	if err := fasthttp.ListenAndServe(port, h); err != nil {
 		log.Fatalf("Error in ListenAndServe: %s", err)
 	}
 }
@@ -246,6 +246,7 @@ func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection u
 	if len(splittedPrefix) != len(splittedRoute) {
 		return false
 	}
+
 	if len(splittedPrefix) == 0 && len(splittedRoute) == 0 {
 		return true
 	}
@@ -257,9 +258,7 @@ func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection u
 		if len(elementRoute) == 0 && len(elementPrefix) == 0 {
 			continue
 		}
-		if elementPrefix == "*" {
-			return true
-		}
+
 		if len(elementPrefix) > 0 && elementPrefix[0] == byte(':') {
 			theMap := paramsForCurrentConnections[currentNumberConnection]
 			if theMap == nil {
@@ -298,8 +297,8 @@ func checkPrefixHTTP(route string, prefix string, currentNumberConnection uint64
 			return true
 		}
 		if len(elementPrefix) > 0 && elementPrefix[0] == byte(':') {
-			theMap := paramsForCurrentConnections[currentNumberConnection]
-			if theMap == nil {
+			currentConnectionParameter := paramsForCurrentConnections[currentNumberConnection]
+			if currentConnectionParameter == nil {
 				paramsForCurrentConnections[currentNumberConnection] = make(map[string]string)
 			}
 			paramsForCurrentConnections[currentNumberConnection][elementPrefix[1:]] = elementRoute

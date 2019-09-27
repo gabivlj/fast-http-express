@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 
 	"github.com/gabivlj/jwt-api/models"
@@ -13,10 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	addr     = flag.String("addr", ":8080", "TCP address to listen to")
-	compress = flag.Bool("compress", false, "Whether to enable transparent response compression")
-)
 var nOfIther = 0
 
 // Simple example of how fast-http-express works
