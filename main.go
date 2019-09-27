@@ -20,8 +20,13 @@ func main() {
 	router2 := NewRouter("/api/http")
 
 	router2.Get("/32", func(ctx *fasthttp.RequestCtx) error {
+		AddToRequestValue(ctx, "wow", "nice")
+		key := RequestKeyValueBytes(ctx, "wow")
+		RespondBytes(ctx, key)
+		return nil
+	}, func(ctx *fasthttp.RequestCtx) error {
 		ctx.SetStatusCode(200)
-		fmt.Fprintf(ctx, "I guess it works...")
+		RespondJSON(ctx, map[string]interface{}{"lol": 32, "yeees": "owo", "user": TestUser{Username: "hehehhee"}})
 		return nil
 	})
 
@@ -42,6 +47,13 @@ func main() {
 	router1.Post("/lol/:id", func(ctx *fasthttp.RequestCtx) error {
 		ctx.SetStatusCode(200)
 		fmt.Fprintf(ctx, string(ctx.PostBody()))
+		return nil
+	})
+
+	router1.Get("/image", func(ctx *fasthttp.RequestCtx) error {
+		ctx.SetContentType("image/png")
+		ctx.SendFile("4.png")
+		fmt.Println(ctx.Value("wow"))
 		return nil
 	})
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -33,6 +34,7 @@ const (
 )
 
 var paramsForCurrentConnections = make(map[uint64]map[string]string)
+var hasFinishedTheConection = make(map[uint64]bool)
 
 // Route >>
 type Route struct {
@@ -147,6 +149,9 @@ func (r *Router) executeHandlers(request *fasthttp.RequestCtx, handlers []RouteI
 				if err != nil {
 					return err
 				}
+				if hasFinishedTheConection[request.ConnRequestNum()] == true {
+					return nil
+				}
 			}
 		}
 	}
@@ -155,31 +160,38 @@ func (r *Router) executeHandlers(request *fasthttp.RequestCtx, handlers []RouteI
 
 // ProcessRequest Processes requests
 func (r *Router) ProcessRequest(request *fasthttp.RequestCtx) error {
+	defer func() {
+		delete(hasFinishedTheConection, request.ConnRequestNum())
+		delete(paramsForCurrentConnections, request.ConnRequestNum())
+	}()
+	hasFinishedTheConection[request.ConnRequestNum()] = false
 	errMiddleware := executeMiddleware(request, r.Middlewares())
 	if errMiddleware != nil {
 		return errMiddleware
 	}
-	// Todo: faster comparison.
-	switch string(request.Method()) {
-	case GETSTRING:
+	if hasFinishedTheConection[request.ConnRequestNum()] == true {
+		return nil
+	}
+	switch true {
+	case request.IsGet():
 		err := r.executeHandlers(request, r.GetHandlers)
 		if err != nil {
 			return err
 		}
 		break
-	case POSTSTRING:
+	case request.IsPost():
 		err := r.executeHandlers(request, r.PostHandlers)
 		if err != nil {
 			return err
 		}
 		break
-	case PUTSTRING:
+	case request.IsPut():
 		err := r.executeHandlers(request, r.PutHandlers)
 		if err != nil {
 			return err
 		}
 		break
-	case DELETESTRING:
+	case request.IsDelete():
 		err := r.executeHandlers(request, r.DeleteHandlers)
 		if err != nil {
 			return err
@@ -219,6 +231,7 @@ func (f *FastModifiedHttp) processRouters(request *fasthttp.RequestCtx) {
 			if err != nil {
 				panic(err)
 			}
+			return
 		}
 	}
 }
@@ -293,3 +306,62 @@ func checkPrefixHTTP(route string, prefix string, currentNumberConnection uint64
 func GetParams(ctx *fasthttp.RequestCtx) map[string]string {
 	return paramsForCurrentConnections[ctx.ConnRequestNum()]
 }
+
+// AddToRequestValue > Adds a key to the request body.
+func AddToRequestValue(ctx *fasthttp.RequestCtx, key string, value interface{}) {
+	ctx.SetUserValue(key, value)
+}
+
+// RequestKeyValue > Returns the specified key.
+func RequestKeyValue(ctx *fasthttp.RequestCtx, key string) interface{} {
+	return ctx.UserValue(key)
+}
+
+// RequestKeyValueBytes > Returns bytes of the key - value relation that you've added with AddToRequestValue. It uses json.Marshal to parse the interface.
+func RequestKeyValueBytes(ctx *fasthttp.RequestCtx, key string) []byte {
+	j, err := json.Marshal(ctx.UserValue(key))
+	if err != nil {
+		return nil
+	}
+	return j
+}
+
+// RequestKeyValueString > Returns string of the key - value relation that you've added with AddToRequestValue. It uses json.Marshal to parse the interface. Returns empty string if error or not found.
+func RequestKeyValueString(ctx *fasthttp.RequestCtx, key string) string {
+	j, err := json.Marshal(ctx.UserValue(key))
+	if err != nil {
+		return ""
+	}
+	return string(j)
+}
+
+// RespondJSON > Responds a json object, handles the content type and data parsing to json.
+func RespondJSON(ctx *fasthttp.RequestCtx, data interface{}) error {
+	// data := []byte{}
+	hasFinishedTheConection[ctx.ConnRequestNum()] = true
+	ctx.SetContentType("application/json")
+	js, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	fmt.Fprint(ctx, string(js))
+	return nil
+}
+
+// RespondBytes > Responds whatever you pass, it doesn't handle the content type.
+func RespondBytes(ctx *fasthttp.RequestCtx, bytes []byte) {
+	hasFinishedTheConection[ctx.ConnRequestNum()] = true
+	fmt.Fprint(ctx, string(bytes))
+}
+
+// RespondText > Responds text that you pass
+func RespondText(ctx *fasthttp.RequestCtx, str string) {
+	hasFinishedTheConection[ctx.ConnRequestNum()] = true
+	fmt.Fprintln(ctx, str)
+}
+
+// RequestKeyValueBytes > Returns the specified key (bytes).
+// func RequestKeyValueBytes(ctx *fasthttp.RequestCtx, key string) []byte {
+// 	switch
+// 	return []byte(ctx.UserValue(key))
+// }
