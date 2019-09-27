@@ -360,6 +360,13 @@ func RespondText(ctx *fasthttp.RequestCtx, str string) {
 	fmt.Fprintln(ctx, str)
 }
 
+// SendFile > Responds a file, contentType is for the content-type header value
+func SendFile(ctx *fasthttp.RequestCtx, path string, contentType string) {
+	hasFinishedTheConection[ctx.ConnRequestNum()] = true
+	ctx.SetContentType(contentType)
+	ctx.SendFile(path)
+}
+
 // RequestKeyValueBytes > Returns the specified key (bytes).
 // func RequestKeyValueBytes(ctx *fasthttp.RequestCtx, key string) []byte {
 // 	switch
