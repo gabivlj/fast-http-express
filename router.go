@@ -240,6 +240,7 @@ func (f *FastModifiedHttp) processRouters(request *fasthttp.RequestCtx) {
 func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection uint64) bool {
 	splittedRoute := strings.Split(route[1:], "/")
 	splittedPrefix := strings.Split(route2[1:], "/")
+
 	if len(splittedPrefix) != len(splittedRoute) && route2[len(route2)-1] != byte('/') {
 		return false
 	}
@@ -263,7 +264,6 @@ func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection u
 			continue
 		}
 		if elementRoute != elementPrefix {
-			fmt.Println(elementRoute, elementPrefix)
 			return false
 		}
 	}
@@ -275,13 +275,13 @@ func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection u
 func checkPrefixHTTP(route string, prefix string, currentNumberConnection uint64) bool {
 	splittedRoute := strings.Split(route[1:], "/")
 	splittedPrefix := strings.Split(prefix[1:], "/")
-
-	if len(splittedPrefix) == 0 && len(splittedRoute) == 0 {
+	if len(splittedPrefix) == 0 || splittedPrefix[0] == "" {
 		return true
 	}
-	if len(splittedPrefix) == 0 || len(splittedRoute) == 0 {
+	if len(splittedRoute) == 0 || splittedPrefix[0] == "" {
 		return false
 	}
+
 	for i := 0; i < len(splittedRoute) && i < len(splittedPrefix); i++ {
 		elementRoute, elementPrefix := splittedRoute[i], splittedPrefix[i]
 		if len(elementRoute) == 0 && len(elementPrefix) == 0 {
