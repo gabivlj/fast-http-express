@@ -238,10 +238,12 @@ func (f *FastModifiedHttp) processRouters(request *fasthttp.RequestCtx) {
 
 // Checks the entire route if it is good
 func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection uint64) bool {
-	splittedRoute := strings.Split(route[1:], "/")
-	splittedPrefix := strings.Split(route2[1:], "/")
+	route2 = strings.Trim(route2, "/")
+	route = strings.Trim(route, "/")
+	splittedRoute := strings.Split(route, "/")
+	splittedPrefix := strings.Split(route2, "/")
 
-	if len(splittedPrefix) != len(splittedRoute) && route2[len(route2)-1] != byte('/') {
+	if len(splittedPrefix) != len(splittedRoute) {
 		return false
 	}
 	if len(splittedPrefix) == 0 && len(splittedRoute) == 0 {
@@ -254,6 +256,9 @@ func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection u
 		elementRoute, elementPrefix := splittedRoute[i], splittedPrefix[i]
 		if len(elementRoute) == 0 && len(elementPrefix) == 0 {
 			continue
+		}
+		if elementPrefix == "*" {
+			return true
 		}
 		if len(elementPrefix) > 0 && elementPrefix[0] == byte(':') {
 			theMap := paramsForCurrentConnections[currentNumberConnection]
@@ -273,8 +278,10 @@ func checkEntireRouteHTTP(route string, route2 string, currentNumberConnection u
 
 // Checks the prefix for routers
 func checkPrefixHTTP(route string, prefix string, currentNumberConnection uint64) bool {
-	splittedRoute := strings.Split(route[1:], "/")
-	splittedPrefix := strings.Split(prefix[1:], "/")
+	prefix = strings.Trim(prefix, "/")
+	route = strings.Trim(route, "/")
+	splittedRoute := strings.Split(route, "/")
+	splittedPrefix := strings.Split(prefix, "/")
 	if len(splittedPrefix) == 0 || splittedPrefix[0] == "" {
 		return true
 	}
@@ -286,6 +293,9 @@ func checkPrefixHTTP(route string, prefix string, currentNumberConnection uint64
 		elementRoute, elementPrefix := splittedRoute[i], splittedPrefix[i]
 		if len(elementRoute) == 0 && len(elementPrefix) == 0 {
 			continue
+		}
+		if elementPrefix == "*" {
+			return true
 		}
 		if len(elementPrefix) > 0 && elementPrefix[0] == byte(':') {
 			theMap := paramsForCurrentConnections[currentNumberConnection]

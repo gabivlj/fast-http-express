@@ -94,7 +94,7 @@ func main() {
 		return nil
 	})
 
-	authentification.Get("/test", JwtAuthentication, func(ctx *fasthttp.RequestCtx) error {
+	authentification.Get("/", JwtAuthentication, func(ctx *fasthttp.RequestCtx) error {
 		ctx.SetStatusCode(200)
 		RespondText(ctx, "yex")
 		return nil
