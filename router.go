@@ -367,6 +367,11 @@ func SendFile(ctx *fasthttp.RequestCtx, path string, contentType string) {
 	ctx.SendFile(path)
 }
 
+// Finished > If you've used the ctx response directly and not a response function of fast-http-express then call this function so it will stop going through handlers/middleware.
+func Finished(ctx *fasthttp.RequestCtx) {
+	hasFinishedTheConection[ctx.ConnRequestNum()] = true
+}
+
 // RequestKeyValueBytes > Returns the specified key (bytes).
 // func RequestKeyValueBytes(ctx *fasthttp.RequestCtx, key string) []byte {
 // 	switch
